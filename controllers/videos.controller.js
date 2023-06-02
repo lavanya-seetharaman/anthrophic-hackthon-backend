@@ -92,7 +92,7 @@ const gettranscribe = async (audiourl) => {
     maxBodyLength: Infinity,
     url: "https://transcribe.whisperapi.com",
     headers: {
-      Authorization: "Bearer E6L8KNAA1ZSSEBVBSBYLJ4UJH45J8WEU",
+      Authorization: `Bearer ${process.env.WHISPER_API_KEY}`,
       ...data.getHeaders(),
     },
     data: data,
