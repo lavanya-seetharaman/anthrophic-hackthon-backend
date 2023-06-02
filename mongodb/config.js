@@ -11,4 +11,4 @@ const connect = (uri) => {
 
 
 
-module.exports = connect(process.env.mongoURI);    
+module.exports = connect(process.env.MONGODB_URI);    
