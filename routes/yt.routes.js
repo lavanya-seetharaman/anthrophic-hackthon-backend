@@ -10,7 +10,7 @@ const { protect } = require("../middlewares/users.middleware");
 
 
 // admin routes
-router.get("/search", protect, ytCtrl.apiGetVideoResults);
+router.post("/search", protect, ytCtrl.apiGetVideoResults);
 router.post("/getaudio", protect, ytCtrl.apiGetByVideoUrl);
 //whisperapi routes
 router.post("/gettranscribe", protect, ytCtrl.apiGetByVideoUrl);

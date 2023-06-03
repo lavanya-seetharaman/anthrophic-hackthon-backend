@@ -8,12 +8,18 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const ytdl = require("ytdl-core");
 const { Long } = require("mongodb");
+const YoutubeTranscript = require('youtube-transcript');
+
+
+const queryService = require("../services/queries.services");
 const google_base_api_url = "https://www.googleapis.com/youtube/v3";
 
 const apiGetVideoResults = async (req, res, next) => {
   try {
-    const searchQuery = req.query.search_query;
+    const { email , searchQuery} = req.body;
     console.log(searchQuery);
+    const queries = await queryService.createQuery(req.body);
+    if (queries) {
     const url = `${google_base_api_url}/search?key=${process.env.YT_DATA_API_KEY}&type=video&part=snippet&q=${searchQuery}`;
     console.log(url);
     const response = await axios.get(url); //youtube data api invoke
@@ -43,6 +49,7 @@ const apiGetVideoResults = async (req, res, next) => {
     } else {
       res.status(404).json("No Results Found. Try Again!");
     }
+  }
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -66,7 +73,6 @@ const apiGetByVideoUrl = async (req, res) => {
         };
         console.log(audio_result);
       let result = await gettranscribe(audio_result); //whisperapi api call
-        console.log("before condition 96", typeof result);
         if (result != undefined) {
           console.log("line 98", result);
           res.status(200).json(result);
@@ -111,9 +117,18 @@ const gettranscribe = async (audio_result) => {
 //claude api https://api.anthropic.com/.
 const getSummary = async (req, res) => {
   const transcribe_txt = req.body.transcribe_txt;
+
+
+// Human:  Here's a video transcript in <transcript> tags:
+// <transcript>
+// Transcript text...
+// </transcript>
+// Summarize the transcript in one paragraph. Keep the summary within 300 words.
+// Assistant: Here's the summary in 300 words <summary>
+
   try {
     let data = JSON.stringify({
-      prompt: `\n\nHuman: ${transcribe_txt}`,
+      prompt: `\n\nHuman: Here's a video transcript in <transcript> tags: \n <transcript>${transcribe_txt}</transcript>\nSummarize the transcript in one paragraph. Keep the summary within 300 words.\n\n Assistant: Here's the summary in 300 words <summary>`,
       model: "claude-instant-v1-100k",
       max_tokens_to_sample: 300,
       stop_sequences: ["\n\nHuman:"],
@@ -141,6 +156,7 @@ const getSummary = async (req, res) => {
     res.status(500).json({ error: error });
   }
 };
+
 
 module.exports = {
   apiGetVideoResults,

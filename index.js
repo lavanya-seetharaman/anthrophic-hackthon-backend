@@ -11,6 +11,7 @@ const cors =require("cors");
 const bodyParser = require("body-parser");
 const Userrouter = require("./routes/users.routes");
 const VideoRouter = require("./routes/yt.routes");
+const QueryRouter = require("./routes/query.routes");
 
 async function bootstrap() {
   const app = express();
@@ -35,6 +36,7 @@ async function bootstrap() {
   );
   app.use("/api/user", Userrouter);
   app.use("/api/v1", VideoRouter);
+  app.use("/api/v1/query", QueryRouter);
   app.all("*", (req, res, next) => {
     next(new AppError(`The URL ${req.originalUrl} does not exists`, 404));
   });
