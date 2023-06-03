@@ -30,6 +30,7 @@ const apiGetVideoResults = async (req, res, next) => {
         newObject.channelId = item.snippet.channelId;
         newObject.channelTitle = item.snippet.channelTitle;
         newObject.videoId = item.id.videoId;
+        newObject.videoTitle = item.snippet.title;
         newObject.videoUrl = `https://www.youtube.com/watch?v=${item.id.videoId}`;
         newObject.description = item.snippet.description;
         newObject.thumbnails = item.snippet.thumbnails;
