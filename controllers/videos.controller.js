@@ -5,7 +5,8 @@ const AppError = require("../helpers/appError");
 const bcrypt = require("bcrypt");
 const FormData = require("form-data");
 const jwt = require("jsonwebtoken");
-const youtubedl = require("youtube-dl-exec");
+const fs = require("fs");
+const ytdl = require("ytdl-core");
 const { Long } = require("mongodb");
 const google_base_api_url = "https://www.googleapis.com/youtube/v3";
 
@@ -49,42 +50,35 @@ const apiGetVideoResults = async (req, res, next) => {
 const apiGetByVideoUrl = async (req, res) => {
   try {
     let urls = [];
-    const { videoUrl } = req.body;
+    const { videoId } = req.body;
     console.log(req.body);
-    youtubedl(videoUrl, {
-      dumpSingleJson: true,
-      noCheckCertificates: true,
-      noWarnings: true,
-      preferFreeFormats: true,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-    })
-      .then(async (output) => {
-        let urlFormats = output.formats;
-        urlFormats.map((format) => {
+    //instead of youtubedl; new package ytdl-core package changed.its working 
+    let info = await ytdl.getInfo(videoId);
+    let audioFormats = ytdl.filterFormats(info.formats, "audioonly");
+    console.log(audioFormats);
+    // let urlFormats = output.formats;
+    audioFormats.map((format) => {
           urls.push(format.url);
         });
         let audio_result = {
-          audio_url: urls[3], //audio format available in 3rd position
+          audio_url: urls[0], //audio format available in 3rd position
         };
-      })
-      .then(async () => {
-        console.log("line 72");
-        let result = await gettranscribe(urls[3]); //whisperapi api call
-        console.log("before condition 74", typeof result);
+        console.log(audio_result);
+      let result = await gettranscribe(audio_result); //whisperapi api call
+        console.log("before condition 96", typeof result);
         if (result != undefined) {
-          console.log("line 75", result);
+          console.log("line 98", result);
           res.status(200).json(result);
         }
-      });
   } catch (error) {
     res.status(500).json({ error: error });
   }
 };
 
-const gettranscribe = async (audiourl) => {
+const gettranscribe = async (audio_result) => {
   let result_txt;
   let data = new FormData();
-  data.append("url", audiourl);
+  data.append("url", audio_result.audio_url);
   // console.log(audiourl);
   console.log("getText API working !", data);
   let config = {
@@ -113,13 +107,12 @@ const gettranscribe = async (audiourl) => {
   return result_txt;
 };
 
-  //claude api https://api.anthropic.com/.
+//claude api https://api.anthropic.com/.
 const getSummary = async (req, res) => {
   const transcribe_txt = req.body.transcribe_txt;
   try {
     let data = JSON.stringify({
-      prompt:
-        `\n\nHuman: ${transcribe_txt}`,
+      prompt: `\n\nHuman: ${transcribe_txt}`,
       model: "claude-instant-v1-100k",
       max_tokens_to_sample: 300,
       stop_sequences: ["\n\nHuman:"],
@@ -129,8 +122,7 @@ const getSummary = async (req, res) => {
       maxBodyLength: Infinity,
       url: "https://api.anthropic.com/v1/complete",
       headers: {
-        "x-api-key":
-          process.env.CLUADE_API_KEY,
+        "x-api-key": process.env.CLUADE_API_KEY,
         "content-type": "application/json",
       },
       data: data,
@@ -152,5 +144,5 @@ const getSummary = async (req, res) => {
 module.exports = {
   apiGetVideoResults,
   apiGetByVideoUrl,
-  getSummary
+  getSummary,
 };

@@ -27,6 +27,6 @@
     "passport-google-oauth": "^2.0.0",
     "passport-google-oauth20": "^2.0.0",
     "python": "^0.0.4",
-    "youtube-dl-exec": "^2.4.3"
+    "ytdl-core": "^4.11.4"
   }
 }
