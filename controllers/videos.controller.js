@@ -63,7 +63,7 @@ const apiGetByVideoUrl = async (req, res) => {
     //instead of youtubedl; new package ytdl-core package changed.its working 
     let info = await ytdl.getInfo(videoId);
     let audioFormats = ytdl.filterFormats(info.formats, "audioonly");
-    console.log(audioFormats);
+    // console.log(audioFormats);
     // let urlFormats = output.formats;
     audioFormats.map((format) => {
           urls.push(format.url);
@@ -71,12 +71,15 @@ const apiGetByVideoUrl = async (req, res) => {
         let audio_result = {
           audio_url: urls[0], //audio format available in 3rd position
         };
-        console.log(audio_result);
-      let result = await gettranscribe(audio_result); //whisperapi api call
-        if (result != undefined) {
-          console.log("line 98", result);
-          res.status(200).json(result);
-        }
+        // console.log(audio_result);
+        await gettranscribe(audio_result)
+        .then((result)=>{
+          if (result != undefined) {
+            console.log("line 98");
+            res.status(200).json(result);
+          }
+        }); //whisperapi api call
+        
   } catch (error) {
     res.status(500).json({ error: error });
   }
@@ -87,7 +90,7 @@ const gettranscribe = async (audio_result) => {
   let data = new FormData();
   data.append("url", audio_result.audio_url);
   // console.log(audiourl);
-  console.log("getText API working !", data);
+  // console.log("getText API working !", data);
   let config = {
     method: "post",
     maxBodyLength: Infinity,
@@ -106,6 +109,7 @@ const gettranscribe = async (audio_result) => {
         text: response.data.text,
         language: response.data.language,
       };
+      console.log(result_txt);
     })
     .catch((error) => {
       console.log(error);
@@ -117,18 +121,9 @@ const gettranscribe = async (audio_result) => {
 //claude api https://api.anthropic.com/.
 const getSummary = async (req, res) => {
   const transcribe_txt = req.body.transcribe_txt;
-
-
-// Human:  Here's a video transcript in <transcript> tags:
-// <transcript>
-// Transcript text...
-// </transcript>
-// Summarize the transcript in one paragraph. Keep the summary within 300 words.
-// Assistant: Here's the summary in 300 words <summary>
-
   try {
     let data = JSON.stringify({
-      prompt: `\n\nHuman: Here's a video transcript in <transcript> tags: \n <transcript>${transcribe_txt}</transcript>\nSummarize the transcript in one paragraph. Keep the summary within 300 words.\n\n Assistant: Here's the summary in 300 words <summary>`,
+      prompt: `\n\n Human: Here's a video transcript in <transcript> tags: \n <transcript>${transcribe_txt}</transcript>\nSummarize the transcript in one paragraph. Keep the summary within 300 words.\n\n Assistant: Here's the summary in 300 words <summary>`,
       model: "claude-instant-v1-100k",
       max_tokens_to_sample: 300,
       stop_sequences: ["\n\nHuman:"],
