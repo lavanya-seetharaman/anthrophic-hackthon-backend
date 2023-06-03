@@ -8,6 +8,7 @@ const AppError = require("./helpers/appError");
 const errorHandler = require("./helpers/errorHandler");
 const headers = require("./helpers/headers");
 const cors =require("cors");
+const http = require('http');
 const bodyParser = require("body-parser");
 const Userrouter = require("./routes/users.routes");
 const VideoRouter = require("./routes/yt.routes");
@@ -15,12 +16,16 @@ const QueryRouter = require("./routes/query.routes");
 
 async function bootstrap() {
   const app = express();
+  const server = http.createServer({}, app);
   const PORT = process.env.PORT;
   
   app.use(passport.initialize());
   app.use(cors());
   app.use(express.json());
   app.use(bodyParser.urlencoded({ extended: false }));
+  // This is the important stuff
+  server.keepAliveTimeout = (60 * 1000) + 2000;
+  server.headersTimeout = (60 * 1000) + 4000;
   passport.use(
     new GoogleStrategy(
       {
@@ -45,7 +50,7 @@ async function bootstrap() {
   // using errors handler
   app.use(errorHandler);
   try {
-    app.listen(PORT, () => console.log(`Application is listening at port ${PORT}`));
+    server.listen(PORT, () => console.log(`Application is listening at port ${PORT}`));
   } catch (err) {
     console.log(err);
   }
