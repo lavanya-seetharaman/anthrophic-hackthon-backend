@@ -71,14 +71,15 @@ const apiGetByVideoUrl = async (req, res) => {
         let audio_result = {
           audio_url: urls[0], //audio format available in 3rd position
         };
-        // console.log(audio_result);
-        await gettranscribe(audio_result)
-        .then((result)=>{
-          if (result != undefined) {
-            console.log("line 98");
-            res.status(200).json(result);
-          }
-        }); //whisperapi api call
+        console.log(audio_result);
+        res.status(200).json(audio_result);
+        // await gettranscribe(audio_result)
+        // .then((result)=>{
+        //   if (result != undefined) {
+        //     console.log("line 98");
+        //     res.status(200).json(result);
+        //   }
+        // }); //whisperapi api call
         
   } catch (error) {
     res.status(500).json({ error: error });
